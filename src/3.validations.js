@@ -40,5 +40,4 @@ const validations = {
 };
 const obj = { name: "wan", email: "ztw.wan@gmail.com" };
 const res = validate(validations, obj);
-
-module.exports = validate;
+console.log(res);
