@@ -1,4 +1,4 @@
-## [Semigroup](0.monoids.js)
+## [Semigroup](./src/0.monoids.js)
 
 ### Keypoints:
 
