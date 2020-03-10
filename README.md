@@ -6,13 +6,13 @@ _closed + associative_
 
 _foldMap is the same as .map().reduce()_
 
-## [Endo Functor](./src/function-modelling/0.reader.js)
+## [Reader Functor](./src/function-modelling/0.reader.js)
 
 ### Keypoints:
 
 Reader: _Similar idea to Dependency injection_
 
-## [Reader Functor](./src/function-modelling/0.reader.js)
+## [Endo Functor](./src/function-modelling/0.reader.js)
 
 ### Keypoints:
 
