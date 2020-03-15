@@ -19,8 +19,12 @@ const htmlFor = html => html.replace(/for=/gi, "htmlFor=");
 //const ex1 = html =>
 //	htmlFor(updateStyleTag(classToClassName(html))) //rewrite using Endo
 // Can also use List foldMap
+
+// Solution1
 // const ex1 = html => List.of(htmlFor, updateStyleTag, classToClassName).foldMap(Endo, Endo.empty()).run(html)
+// Solution 2
 // const ex2 = html => [htmlFor, updateStyleTag, classToClassName].reduce((acc, curr) => acc.concat(Endo(curr)), Endo.empty()).run(html)
+// Solution 3
 const ex1 = html =>
   Endo(htmlFor)
     .concat(Endo(updateStyleTag))
