@@ -1,35 +1,13 @@
-const {
-  of,
-  Observable,
-  merge,
-  timer,
-  Subject,
-  combineLatest,
-} = require("rxjs");
+const { merge, timer, Subject, combineLatest } = require("rxjs");
 const {
   tap,
-  map,
   mapTo,
   skip,
-  race,
   filter,
-  take,
   startWith,
   takeUntil,
   switchMap,
 } = require("rxjs/operators");
-
-const sub = {
-  next: (d) => {
-    console.log("next", d);
-  },
-  err: () => {
-    console.error(err);
-  },
-  complete: () => {
-    console.log("complete");
-  },
-};
 
 const taskStartSubject = new Subject();
 const taskStart = taskStartSubject.asObservable();
@@ -80,6 +58,8 @@ const hideSpinner = merge(
   hideSpinnerAfterTimerAndTaskEnd
 ).pipe(tap(() => console.log("hide")));
 const Spinner = showSpinner.pipe(takeUntil(hideSpinner));
+
+// test
 Spinner.subscribe();
 
 taskStartSubject.next();
