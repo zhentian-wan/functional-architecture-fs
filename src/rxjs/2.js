@@ -9,61 +9,99 @@ const {
   switchMap,
 } = require("rxjs/operators");
 
+const DELAY = 500;
+const MIN_DURATION = 1200;
+
 const taskStartSubject = new Subject();
 const taskStart = taskStartSubject.asObservable();
 const taskEndSubject = new Subject();
 const taskEnd = taskEndSubject.asObservable();
-const busyDelayTimer = timer(500);
-const busyMinDurationTimer = timer(3000);
-
-////////////// start/////////////////
+const busyDelayTimer = timer(DELAY);
+const busyMinDurationTimer = timer(MIN_DURATION + DELAY);
 const busyDelayTimerStart = taskStart.pipe(switchMap(() => busyDelayTimer));
 const busyDelayTimerEnd = busyDelayTimerStart.pipe(takeUntil(taskEnd));
 const emitOnTaskEnd = taskEnd.pipe(mapTo(1));
-const emitOnTimeout = busyDelayTimerEnd.pipe(mapTo(-1));
-const emitOnTimerEnd = busyMinDurationTimer.pipe(mapTo(-1));
-const taskEndBeforeTimeout = combineLatest([
+const emitOnDelayTimerEnd = busyDelayTimerEnd.pipe(mapTo(-1));
+const emitOnMinDurationEnd = busyMinDurationTimer.pipe(mapTo(-1));
+
+////////////// start/////////////////
+
+const raceBetweenTaskAndDelay = combineLatest([
   emitOnTaskEnd.pipe(startWith(null)),
-  emitOnTimeout.pipe(startWith(null)),
+  emitOnDelayTimerEnd.pipe(startWith(null)),
 ]).pipe(skip(1));
-const showSpinner = taskEndBeforeTimeout.pipe(
+const taskEndBeforeDelay = raceBetweenTaskAndDelay.pipe(
   filter(([taskEndFirst, timerEndFirst]) => {
-    return taskEndFirst === null && timerEndFirst !== null;
-  }),
-  tap(() => console.log("show"))
+    return taskEndFirst === 1 && timerEndFirst === null;
+  })
+);
+const shouldNotShowSpinner = taskEndBeforeDelay.pipe(mapTo(false));
+const taskEndAfterTimeout = raceBetweenTaskAndDelay.pipe(
+  filter(([taskEndFirst, timerEndFirst]) => {
+    return taskEndFirst === null && timerEndFirst === -1;
+  })
+);
+const shouldShowSpinner = taskEndAfterTimeout.pipe(mapTo(true));
+const showSpinner = shouldShowSpinner.pipe(
+  tap(() => {
+    console.timeLog("spinner");
+    console.log("show");
+  })
 );
 
 /////////////// end ///////////////
 
-const taskEndBeforeTimerEnd = showSpinner.pipe(() =>
-  combineLatest([
-    emitOnTaskEnd.pipe(startWith(null)),
-    emitOnTimerEnd.pipe(startWith(null)),
-  ]).pipe(skip(1))
-);
-const hideSpinnerUntilTimerEnd = taskEndBeforeTimerEnd.pipe(
+const raceBetweenTaskAndMinDuration = combineLatest([
+  emitOnTaskEnd.pipe(startWith(null)),
+  emitOnMinDurationEnd.pipe(startWith(null)),
+]).pipe(skip(1));
+const hideSpinnerUntilMinDurationEnd = raceBetweenTaskAndMinDuration.pipe(
   filter(([taskEndFirst, timerEndFirst]) => {
-    return taskEndFirst !== null && timerEndFirst === null;
-  }),
-  takeUntil(emitOnTimerEnd)
+    return taskEndFirst === 1 && timerEndFirst === null;
+  })
 );
-const hideSpinnerAfterTimerAndTaskEnd = taskEndBeforeTimerEnd.pipe(
+const hideSpinnerAfterTimerAndTaskEnd = raceBetweenTaskAndMinDuration.pipe(
   filter(([taskEndFirst, timerEndFirst]) => {
-    return taskEndFirst === null && timerEndFirst !== null;
-  }),
-  takeUntil(taskEnd)
+    return taskEndFirst === 1 && timerEndFirst === -1;
+  })
 );
 const hideSpinner = merge(
-  hideSpinnerUntilTimerEnd,
+  // case 1: should not show spinner at all
+  shouldNotShowSpinner,
+  // case 2: task end, but wait until min duration timer ends
+  combineLatest([hideSpinnerUntilMinDurationEnd, emitOnMinDurationEnd]),
+  // case 3: task takes a long time, wait unitl its end
   hideSpinnerAfterTimerAndTaskEnd
-).pipe(tap(() => console.log("hide")));
+).pipe(
+  tap(() => {
+    console.timeLog("spinner");
+    console.log("hide");
+  })
+);
 const Spinner = showSpinner.pipe(takeUntil(hideSpinner));
 
 // test
 Spinner.subscribe();
 
+console.log("task start");
+console.time("spinner");
 taskStartSubject.next();
+
+// Case 1: Should not show spinner
 
 setTimeout(() => {
   taskEndSubject.next();
-}, 1000);
+}, 50);
+
+// Case 2: Should show spinner when busyMinDurationMs end
+/*
+setTimeout(() => {
+  taskEndSubject.next();
+}, 600);
+*/
+// Case 3: Should show spinner until task ends
+/*
+setTimeout(() => {
+  taskEndSubject.next();
+}, 2000);
+*/
