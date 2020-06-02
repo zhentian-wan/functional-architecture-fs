@@ -135,15 +135,42 @@ const List = (x) => ({
   foldMap(type, _empty) {
     const empty = _empty ? _empty : type.empty();
     if (!empty) throw new Error(`foldMap expect an empty as second value`);
-    return x
-      .map(type)
-      .reduce((acc, curr) => {
-        return acc.concat(curr);
-      }, empty)
-      .fold();
+    return x.map(type).reduce((acc, curr) => {
+      return acc.concat(curr);
+    }, empty);
   },
 });
 
+const Right = (x) => ({
+  x,
+  chain: (f) => f(x),
+  map: (f) => Right(f(x)),
+  concat: (o) => Right(x.concat(o.x)),
+  fold: (f, g) => g(x),
+  isRight: true,
+  isLeft: false,
+  toString: `Right(${x})`,
+});
+
+const Left = (x) => ({
+  x,
+  chain: (f) => Left(x),
+  map: (f) => Left(x),
+  concat: (o) => Left(x),
+  fold: (f, g) => f(x),
+  isRight: false,
+  isLeft: true,
+  toString: `Left(${x})`,
+});
+
+const Alternative = (ex) => ({
+  ex,
+  concat: (o) => Alternative(o.ex.isLeft ? ex : ex.concat(o.ex)),
+});
+
+/**
+ *
+ */
 const identity = (i) => i;
 const compose = (f, g) => (...args) => f(g(...args));
 const converge = (combineFn, [fn1, fn2]) => (data) =>
@@ -203,3 +230,17 @@ const TimeSeries = {
       .fold();
   },
 };
+
+const res = Alternative(Right("hello"))
+  .concat(Alternative(Right("world")))
+  .concat(Alternative(Left("errrr")))
+  .concat(Alternative(Right("!!")));
+console.log(res.ex.fold(identity, identity)); // helloworld!!
+
+const res1 = List([
+  Right("hello"),
+  Right("world"),
+  Left("errrr"),
+  Right("!!!!"),
+]).foldMap(Alternative, Alternative(Right("")));
+console.log(res1.ex.fold(identity, identity)); // helloworld!!!!
