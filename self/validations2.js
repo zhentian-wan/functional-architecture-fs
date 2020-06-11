@@ -16,6 +16,9 @@ const Fail = (x) => ({
   },
 });
 
+// Validation takes a run function
+// which return Success or Fail monids
+// Validation only takes care of concatnation
 const Validation = (run) => ({
   run,
   concat(o) {
