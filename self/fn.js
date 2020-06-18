@@ -34,3 +34,9 @@ const res2 = Fn(toUpper).chain((upper) =>
 );
 
 console.log(res2.run("hello"));
+
+const res3 = Fn.of("hi")
+  .map(toUpper)
+  .chain((upper) => Fn((config) => [upper, config]));
+
+console.log(res3.run({ port: 3000 }));

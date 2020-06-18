@@ -1,0 +1,6 @@
+#path/to/current/dir
+# will only return 'dir'
+currentDir=echo ${PWD##*/}
+cd ..
+mv $currentDir $1
+cd $1

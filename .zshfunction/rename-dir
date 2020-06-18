@@ -1,0 +1,4 @@
+currentDir=echo ${PWD##*/}
+cd ..
+mv $currentDir $1
+cd $1
