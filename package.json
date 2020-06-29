@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "daggy": "^1.4.0",
     "data.either": "^1.5.2",
     "data.task": "^3.1.2",
     "folktale": "^2.3.2",
