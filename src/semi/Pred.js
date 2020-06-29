@@ -14,9 +14,13 @@ const p = Pred((x) => x > 4)
   .contramap((x) => x.length)
   .concat(Pred((x) => x.startsWith("s")));
 
-const result = ["scary", "sally", "sipped", "the", "soup"].filter(p.run);
-
-console.log(result == ["scary", "sally", "sipped"]);
+QUnit.test("Ex2: pred", (assert) => {
+  const p = Pred((x) => x > 4)
+    .contramap((x) => x.length)
+    .concat(Pred((x) => x.startsWith("s")));
+  const result = ["scary", "sally", "sipped", "the", "soup"].filter(p.run);
+  assert.deepEqual(result, ["scary", "sally", "sipped"]);
+});
 
 // Ex3:
 // =========================
