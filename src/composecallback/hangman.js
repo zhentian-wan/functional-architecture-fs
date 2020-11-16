@@ -37,4 +37,46 @@ let stringConcat = (broadcaster) => (listener) => {
 };
 
 let hangman = pipe(map(hangmanLogic), applyOperator(word), stringConcat);
-hangman(inputValue)(log);
+
+let doneCondition = (condition) => (broadcaster) => (listener) => {
+  let cancel = filter(condition)(broadcaster)((value) => {
+    listener(done);
+    cancel();
+  });
+
+  return () => {
+    cancel();
+  };
+};
+
+let mapDone = (doneValue) => (broadcaster) => (listener) => {
+  broadcaster((value) => {
+    if (value === done) {
+      listener(doneValue);
+    }
+  });
+};
+let cancelWhen = (cancelBroadcaster) => (broadcaster) => (listener) => {
+  let cancel = broadcaster(listener);
+
+  let cancel2 = cancelBroadcaster(() => {
+    cancel();
+  });
+
+  return () => {
+    cancel();
+    cancel2();
+  };
+};
+
+let winPipe = pipe(
+  doneCondition((str) => !str.includes("*")),
+  mapDone("you win!")
+);
+let play = hangman(inputValue);
+let win = winPipe(play);
+
+let rules = pipe(cancelWhen(win));
+let playWithWin = rules(play);
+playWithWin(console.log);
+win(console.log);
